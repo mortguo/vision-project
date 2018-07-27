@@ -1,4 +1,4 @@
-from keras.layers import Dense, Flatten
+from keras.layers import Dense, Flatten, Dropout, Conv2D, MaxPooling2D, AveragePooling2D
 from keras.models import Sequential
 from keras.callbacks import Callback
 import pandas as pd
@@ -53,14 +53,28 @@ train_faces /= 255.
 val_faces /= 255.
 
 model = Sequential()
-model.add(Flatten(input_shape=input_shape))
-model.add(Dense(num_classes, activation="softmax"))
+model.add(Conv2D(64,(5, 5),input_shape=(48, 48, 1),activation='relu',padding='same'))
+#model.add(Conv2D(64,(5, 5),input_shape=(48, 48, 1),activation='relu',padding='same'))
+model.add(AveragePooling2D(pool_size=(2, 2)))
+model.add(Conv2D(64,(3, 3),activation='relu',padding='same'))
+#model.add(Conv2D(64,(3, 3),activation='relu',padding='same'))
+model.add(AveragePooling2D(pool_size=(2, 2)))
+model.add(Conv2D(128,(3, 3),activation='relu',padding='same'))
+# model.add(Conv2D(128,(3, 3),activation='relu',padding='same'))
+model.add(AveragePooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+model.add(Dropout(0.5))
+model.add(Dense(1024, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(1024, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation='softmax'))
 
-model.compile(optimizer='adam', loss='categorical_crossentropy',
+model.compile(optimizer='adam', loss='binary_crossentropy',
 metrics=['accuracy'])
 
 model.fit(train_faces, train_emotions, batch_size=config.batch_size,
-        epochs=config.num_epochs, verbose=1, callbacks=[
+        epochs=20, verbose=1, callbacks=[
             WandbCallback(data_type="image", labels=["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"])
         ], validation_data=(val_faces, val_emotions))
 
